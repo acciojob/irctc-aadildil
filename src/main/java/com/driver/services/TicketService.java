@@ -50,12 +50,12 @@ public class TicketService {
 
         //checking for booking passenger
         Optional<Passenger> bookingPassengerOptional=passengerRepository.findById(bookTicketEntryDto.getBookingPersonId());
-        if(bookingPassengerOptional.isEmpty())
+        if(!bookingPassengerOptional.isPresent())
             throw new Exception("passenger not found");
 
         //checking for train
         Optional<Train> optionalTrain=trainRepository.findById(bookTicketEntryDto.getTrainId());
-        if(optionalTrain.isEmpty())
+        if(!optionalTrain.isPresent())
             throw new Exception("train not found");
 
         //booking person
@@ -117,7 +117,7 @@ public class TicketService {
         for(Integer passId:passengerIds)
         {
             Optional<Passenger> passengerOptional=passengerRepository.findById(passId);
-            if(passengerOptional.isEmpty())
+            if(!passengerOptional.isPresent())
                 throw new Exception("passenger not found");
             else
                 passengers.add(passengerOptional.get());
