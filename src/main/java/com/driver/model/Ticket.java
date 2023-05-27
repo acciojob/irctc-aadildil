@@ -9,6 +9,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -20,7 +21,7 @@ public class Ticket {
 
     //This is also parent wrt to ticketEntity
     @ManyToMany(mappedBy = "bookedTickets",cascade = CascadeType.ALL)
-    private List<Passenger> passengersList;
+    private List<Passenger> passengersList=new ArrayList<>();
 
     @ManyToOne
     @JoinColumn
