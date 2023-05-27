@@ -49,65 +49,72 @@ public class TicketService {
        //And the end return the ticketId that has come from db
 
         //checking for booking passenger
-        Optional<Passenger> bookingPassengerOptional=passengerRepository.findById(bookTicketEntryDto.getBookingPersonId());
-        if(!bookingPassengerOptional.isPresent())
-            throw new Exception("passenger not found");
-
-        //checking for train
-        Optional<Train> optionalTrain=trainRepository.findById(bookTicketEntryDto.getTrainId());
-        if(!optionalTrain.isPresent())
-            throw new Exception("train not found");
-
-        //booking person
-        Passenger bookingPassenger=bookingPassengerOptional.get();
-        //booking train
-        Train train=optionalTrain.get();
-        //passengers list
-        List<Passenger> passengerList=getPassengers(bookTicketEntryDto.getPassengerIds());
-
-        //number of seats booked
-        int numberOfSeatsNeeded=passengerList.size();
-
-        int totalSeatsBooked=0;
-        for(Ticket ticket:train.getBookedTickets())
-        {
-            totalSeatsBooked+=ticket.getPassengersList().size();
+        //Check for validity
+        Train train=trainRepository.findById(bookTicketEntryDto.getTrainId()).get();
+        int bookedSeats=0;
+        List<Ticket>booked=train.getBookedTickets();
+        for(Ticket ticket:booked){
+            bookedSeats+=ticket.getPassengersList().size();
         }
 
-        //checking for tickets availability
-        if(train.getNoOfSeats()-totalSeatsBooked<numberOfSeatsNeeded)
+        if(bookedSeats+bookTicketEntryDto.getNoOfSeats()> train.getNoOfSeats()){
             throw new Exception("Less tickets are available");
+        }
 
-
-
-
-        //calculating fare
-        int startStationNumber=getStationNo(train,bookTicketEntryDto.getFromStation());
-        int endStationNumber=getStationNo(train,bookTicketEntryDto.getToStation());
-        int numberOfStations=endStationNumber-startStationNumber;
-        int totalFare=300*(numberOfStations)*numberOfSeatsNeeded;
-        //train.setNoOfSeats(train.getNoOfSeats()-numberOfSeatsNeeded);
-
-
+        String stations[]=train.getRoute().split(",");
+        List<Passenger>passengerList=new ArrayList<>();
+        List<Integer>ids=bookTicketEntryDto.getPassengerIds();
+        for(int id: ids){
+            passengerList.add(passengerRepository.findById(id).get());
+        }
+        int x=-1,y=-1;
+        for(int i=0;i<stations.length;i++){
+            if(bookTicketEntryDto.getFromStation().toString().equals(stations[i])){
+                x=i;
+                break;
+            }
+        }
+        for(int i=0;i<stations.length;i++){
+            if(bookTicketEntryDto.getToStation().toString().equals(stations[i])){
+                y=i;
+                break;
+            }
+        }
+        if(x==-1||y==-1||y-x<0){
+            throw new Exception("Invalid stations");
+        }
         Ticket ticket=new Ticket();
-        ticket.setTotalFare(totalFare);
+        ticket.setPassengersList(passengerList);
         ticket.setFromStation(bookTicketEntryDto.getFromStation());
         ticket.setToStation(bookTicketEntryDto.getToStation());
-        ticket.setPassengersList(passengerList);
+
+        int fair=0;
+        fair=bookTicketEntryDto.getNoOfSeats()*(y-x)*300;
+
+        ticket.setTotalFare(fair);
         ticket.setTrain(train);
 
+        train.getBookedTickets().add(ticket);
+        train.setNoOfSeats(train.getNoOfSeats()-bookTicketEntryDto.getNoOfSeats());
 
-      // Save both ticket and train entities
-       Ticket savedTicket= ticketRepository.save(ticket);
-       train.getBookedTickets().add(savedTicket);
+        Passenger passenger=passengerRepository.findById(bookTicketEntryDto.getBookingPersonId()).get();
+        passenger.getBookedTickets().add(ticket);
+        //Use bookedTickets List from the TrainRepository to get bookings done against that train
+        // Incase the there are insufficient tickets
+        // throw new Exception("Less tickets are available");
+        //otherwise book the ticket, calculate the price and other details
+        //Save the information in corresponding DB Tables
+        //Fare System : Check problem statement
+        //Incase the train doesn't pass through the requested stations
+        //throw new Exception("Invalid stations");
+        //Save the bookedTickets in the train Object
+        //Also in the passenger Entity change the attribute bookedTickets by using the attribute bookingPersonId.
+        //And the end return the ticketId that has come from db
+
         trainRepository.save(train);
-        for(Passenger passenger:passengerList)
-        {
-            passenger.getBookedTickets().add(savedTicket);
-            passengerRepository.save(passenger);
-        }
 
-        return savedTicket.getTicketId();
+        return ticketRepository.save(ticket).getTicketId();
+
 
 
     }
