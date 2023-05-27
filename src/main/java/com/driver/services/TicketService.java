@@ -107,13 +107,6 @@ public class TicketService {
             passengerRepository.save(passenger);
         }
 
-
-
-
-
-
-
-
         return savedTicket.getTicketId();
 
 

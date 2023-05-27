@@ -145,7 +145,7 @@ public class TrainService {
 
         int age=Integer.MIN_VALUE;
         Optional<Train> optionalTrain=trainRepository.findById(trainId);
-        if(optionalTrain.isEmpty())
+        if(!optionalTrain.isPresent())
             throw new Exception("Train not fount");
         Train train=optionalTrain.get();
         List<Ticket> bookedTickets=train.getBookedTickets();

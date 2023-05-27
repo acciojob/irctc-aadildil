@@ -21,7 +21,7 @@ public class Ticket {
 
     //This is also parent wrt to ticketEntity
     @ManyToMany(mappedBy = "bookedTickets",cascade = CascadeType.ALL)
-    private List<Passenger> passengersList=new ArrayList<>();
+    private List<Passenger> passengersList;
 
     @ManyToOne
     @JoinColumn
